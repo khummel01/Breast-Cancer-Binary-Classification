@@ -1,0 +1,75 @@
+---
+title: "Breast Cancer Binary Classification"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r echo=FALSE}
+# Libraries
+library(tidyr)
+library(ggplot2)
+library(corrplot)
+library ("MASS")
+library(car)
+library(lmtest)
+```
+
+## Abstract 
+
+## Introduction
+
+## Exploratory Analysis
+
+```{r echo=FALSE}
+# Read in the data
+folder = "/Users/katie/repos/Breast-Cancer-Binary-Classification"
+cancer = read.csv(paste (folder, "breastcancer.csv", sep="/"),header=T)
+attach (cancer)
+par (mfrow = c(1, 2))
+# hist (quality, xlab="Quality", main="Histogram of Quality")
+# boxplot (quality, horizontal = T, xlab="Quality", main="Boxplot of Quality")
+```
+
+```{r}
+head(cancer)
+```
+
+### Cleaning up the data
+
+```{r}
+# Removing id column
+cancer$id <- NULL
+# Replacing diagnostic 'M' with 1, 'B' with 0
+# cancer$diagnosis <- as.factor(cancer$diagnosis)
+# cancer$diagnosis <- replace(cancer$diagnosis, cancer$diagnosis == "M", 1)
+# cancer$diagnosis[diagnosis = "B"] = 0
+cancer$diagnosis2 = 3
+cancer$diagnosis2[cancer$diagnosis == "M"] = 0
+cancer$diagnosis2[cancer$diagnosis == "B"] = 1
+cancer$diagnosis <- NULL
+# names(cancer)[32]<-"diagnosis"
+
+```
+
+```{r}
+summary(cancer)
+```
+
+```{r}
+table(diagnosis)
+```
+
+```{r}
+barplot(table(diagnosis), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="Count", ylim=c(0, 500))
+```
+
+
+```{r}
+cancer %>% gather() %>% head()
+ggplot(gather(cancer), aes(value)) + 
+    geom_histogram(bins = 8) + 
+    facet_wrap(~key, scales = 'free_x')
+```
