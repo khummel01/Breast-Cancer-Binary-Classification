@@ -1,6 +1,8 @@
 ---
 title: "Breast Cancer Binary Classification"
 output: html_document
+  toc: yes
+
 ---
 
 ```{r setup, include=FALSE}
@@ -15,13 +17,14 @@ library(corrplot)
 library ("MASS")
 library(car)
 library(lmtest)
+library(magrittr)
 ```
 
 ## Abstract 
 
 ## Introduction
 
-## Exploratory Analysis
+# Data Characteristics
 
 ```{r echo=FALSE}
 # Read in the data
@@ -33,26 +36,20 @@ par (mfrow = c(1, 2))
 # boxplot (quality, horizontal = T, xlab="Quality", main="Boxplot of Quality")
 ```
 
-```{r}
-head(cancer)
-```
-
-### Cleaning up the data
+Cleaning the data:
 
 ```{r}
-# Removing id column
+# Removing columns id and X
 cancer$id <- NULL
-# Replacing diagnostic 'M' with 1, 'B' with 0
-# cancer$diagnosis <- as.factor(cancer$diagnosis)
-# cancer$diagnosis <- replace(cancer$diagnosis, cancer$diagnosis == "M", 1)
-# cancer$diagnosis[diagnosis = "B"] = 0
+cancer$X <- NULL
 cancer$diagnosis2 = 3
+# Reassigning malignant masses as 0 and benign 1
 cancer$diagnosis2[cancer$diagnosis == "M"] = 0
 cancer$diagnosis2[cancer$diagnosis == "B"] = 1
 cancer$diagnosis <- NULL
-# names(cancer)[32]<-"diagnosis"
 
 ```
+
 
 ```{r}
 summary(cancer)
@@ -60,16 +57,83 @@ summary(cancer)
 
 ```{r}
 table(diagnosis)
+
 ```
 
 ```{r}
-barplot(table(diagnosis), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="Count", ylim=c(0, 500))
+barplot(table(diagnosis), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="Count", ylim=c(0, 450))
 ```
-
 
 ```{r}
 cancer %>% gather() %>% head()
 ggplot(gather(cancer), aes(value)) + 
     geom_histogram(bins = 8) + 
     facet_wrap(~key, scales = 'free_x')
+
 ```
+
+The table of benign and malignant tumor counts and bar plot above show that out of the 569 images of breast masses collected, 357 of them were benign and 212 malignant. As indicated by the distribution plot of each variable above, it appears that predictors area_mean, area_se, and area_worst are clearly right-skewed. We will explore the log transformation of these predictors in order to make these distributions more symmetric.
+
+Distribution of area_mean:
+
+```{r}
+par (mfrow = c(1, 2))
+hist (area_mean)
+boxplot (area_mean, horizontal = T, xlab="area_mean", main="Boxplot of area_mean")
+
+```
+
+Singling out predictor area_mean, it is clear that its distribution is right-skewed.
+
+```{r}
+par (mfrow = c(1, 2))
+hist (log(area_mean))
+boxplot (log(area_mean), horizontal = T, xlab="area_mean", main="Boxplot of area_mean")
+
+```
+
+After a log transformation, the distribution of area_se is significantly more symmetric. We will use the log transformation of this area_se as we continue with our analysis.
+
+```{r}
+par (mfrow = c(1, 2))
+hist (area_se)
+boxplot (area_se, horizontal = T, xlab="area_se", main="Boxplot of area_se")
+
+cancer$log_area_se = log(area_se)
+
+```
+
+As indicated by the histogram and box plot above, the distribution of area_se is right-skewed. 
+
+```{r}
+par (mfrow = c(1, 2))
+hist (log(area_se))
+boxplot (log(area_se), horizontal = T, xlab="area_se", main="Boxplot of area_se")
+
+cancer$log_area_se = log(area_se)
+
+```
+
+With the log transformation, area_se is more symmetric. We will continue our analysis using the log transformation of this predictor.
+
+```{r}
+par (mfrow = c(1, 2))
+hist (area_worst)
+boxplot (area_worst, horizontal = T, xlab="chlorides", main="Boxplot of chlorides")
+
+```
+
+Area_worst is also very right skewed.
+
+```{r}
+par (mfrow = c(1, 2))
+hist (log(area_worst))
+boxplot (log(area_worst), horizontal = T, xlab="area_worst", main="Boxplot of area_worst")
+
+cancer$log_area_worst = log(area_worst)
+
+```
+
+Area_worst is more symmetric with the log transformation. We will also continue our analysis with this predictor transformed.
+
+# Data Characteristics
