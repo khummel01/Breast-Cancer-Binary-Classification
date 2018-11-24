@@ -20,9 +20,9 @@ library(lmtest)
 library(magrittr)
 ```
 
-## Abstract 
+# Abstract 
 
-## Introduction
+# Introduction
 
 # Data Characteristics
 
@@ -30,7 +30,6 @@ library(magrittr)
 # Read in the data
 folder = "/Users/katie/repos/Breast-Cancer-Binary-Classification"
 cancer = read.csv(paste (folder, "breastcancer.csv", sep="/"),header=T)
-attach (cancer)
 par (mfrow = c(1, 2))
 # hist (quality, xlab="Quality", main="Histogram of Quality")
 # boxplot (quality, horizontal = T, xlab="Quality", main="Boxplot of Quality")
@@ -43,25 +42,22 @@ Cleaning the data:
 cancer$id <- NULL
 cancer$X <- NULL
 cancer$diagnosis2 = 3
-# Reassigning malignant masses as 0 and benign 1
-cancer$diagnosis2[cancer$diagnosis == "M"] = 0
-cancer$diagnosis2[cancer$diagnosis == "B"] = 1
+# Reassigning malignant masses as 1 and benign 0
+cancer$diagnosis2[cancer$diagnosis == "M"] = 1
+cancer$diagnosis2[cancer$diagnosis == "B"] = 0
 cancer$diagnosis <- NULL
 
-```
-
-
-```{r}
-summary(cancer)
-```
-
-```{r}
-table(diagnosis)
+attach (cancer)
 
 ```
 
 ```{r}
-barplot(table(diagnosis), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="Count", ylim=c(0, 450))
+table(diagnosis2)
+
+```
+
+```{r}
+barplot(table(diagnosis2), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="Count", ylim=c(0, 450))
 ```
 
 ```{r}
@@ -72,68 +68,89 @@ ggplot(gather(cancer), aes(value)) +
 
 ```
 
-The table of benign and malignant tumor counts and bar plot above show that out of the 569 images of breast masses collected, 357 of them were benign and 212 malignant. As indicated by the distribution plot of each variable above, it appears that predictors area_mean, area_se, and area_worst are clearly right-skewed. We will explore the log transformation of these predictors in order to make these distributions more symmetric.
-
-Distribution of area_mean:
+The table of benign and malignant tumor counts and bar plot above show that out of the 569 images of breast masses collected, 357 of them were benign and 212 malignant. As indicated by the distribution plot of each variable above, it appears that predictors area_mean, area_se, area_worst, compactness_mean, compactness_se, compactness_worst, concave.points.mean, concavity_mean, concavity_se, perimeter_worst, radius_worst, smoothness_se, symmetry_se, and texture_se are clearly right-skewed. Transformations are needed to make these distributions more symmetric.
 
 ```{r}
-par (mfrow = c(1, 2))
-hist (area_mean)
-boxplot (area_mean, horizontal = T, xlab="area_mean", main="Boxplot of area_mean")
+# Adding the log transformed predictors to the data set
+cancer$log.area_mean = log(area_mean)
+cancer$log.area_se = log(area_se)
+cancer$log.area_worst = log(area_worst)
+cancer$log.compactness_mean = log(compactness_mean)
+cancer$log.compactness_se = log(compactness_se)
+cancer$log.compactness_worst = log(compactness_worst)
+cancer$log.concave.points_mean = log(10*(concave.points_mean) + 0.01)
+cancer$log.concavity_mean = log(10*(concavity_mean) + 0.01)
+cancer$log.concavity_se = log(10*(concavity_se) + 0.01)
+cancer$log.perimeter_worst = log(perimeter_worst)
+cancer$log.radius_worst = log(radius_worst)
+cancer$log.smoothness_se = log(smoothness_se)
+cancer$log.symmetry_se = log(symmetry_se)
+cancer$log.texture_se = log(texture_se)
+
+# Creating a dataframe with just the log transformed predictors
+transformed_predictors = data.frame(cancer$log.area_mean, cancer$log.area_se, cancer$log.area_worst, cancer$log.compactness_mean, cancer$log.compactness_se, cancer$log.compactness_worst, cancer$log.concave.points_mean, cancer$log.concavity_mean, cancer$log.concavity_se, cancer$log.perimeter_worst, cancer$log.radius_worst, cancer$log.smoothness_se, cancer$log.symmetry_se, cancer$log.texture_se)
+
+# Plotting the log transformed predictors
+transformed_predictors %>% gather() %>% head()
+ggplot(gather(transformed_predictors), aes(value)) + 
+    geom_histogram(bins = 8) + 
+    facet_wrap(~key, scales = 'free_x')
+
+# Creating a dataframe of just transformed predictors and predictors that did not need transformations
+cancer2 <- cancer
+cancer2 <- subset(cancer2, select=-c(area_mean, area_se, area_worst, compactness_mean, compactness_se, compactness_worst, concave.points_mean, concavity_mean, concavity_se, perimeter_worst, radius_worst, smoothness_se, symmetry_se, texture_se))
+
+detach(cancer)
+attach(cancer2)
 
 ```
 
-Singling out predictor area_mean, it is clear that its distribution is right-skewed.
+The severly right-skewed predictors now have a more symmetric distribution with the log transformation applied. We will use these log transformed predictors as we proceed with our analysis.
 
+#todo: plots of the significant predictors after we have our final model
+
+# THIS IS A TEST, log.area_mean was randomly selected to look at 
 ```{r}
-par (mfrow = c(1, 2))
-hist (log(area_mean))
-boxplot (log(area_mean), horizontal = T, xlab="area_mean", main="Boxplot of area_mean")
-
+plot (jitter (diagnosis2, 0.1) ~ log.area_mean, xlab="Age, years", ylab="Disease Status (0=No, 1=Yes)")
+lines (lowess (log.area_mean, diagnosis2), col='darkgreen')
 ```
 
-After a log transformation, the distribution of area_se is significantly more symmetric. We will use the log transformation of this area_se as we continue with our analysis.
+
+# First-order Logistic Regression Model
+
+A first-order logistic regression model that was fit using all 30 predictors, log transformations applied.
 
 ```{r}
-par (mfrow = c(1, 2))
-hist (area_se)
-boxplot (area_se, horizontal = T, xlab="area_se", main="Boxplot of area_se")
+model1 <- glm(diagnosis ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + symmetry_mean + fractal_dimension_mean + radius_se + perimeter_se + concave.points_se + fractal_dimension_se + texture_worst + smoothness_worst + concavity_worst + concave.points_worst + symmetry_worst + fractal_dimension_worst + log.area_mean + log.area_se + log.area_worst + log.compactness_mean + log.compactness_se + log.compactness_worst + log.concave.points_mean + log.concavity_mean + log.concavity_se + log.perimeter_worst + log.radius_worst + log.smoothness_se + log.symmetry_se + log.texture_se, family=binomial, data=cancer2)
 
-cancer$log_area_se = log(area_se)
-
+summary(model1)
+exp (model1$coefficients)
 ```
 
-As indicated by the histogram and box plot above, the distribution of area_se is right-skewed. 
+There appears to be no significant predictors in the model. 
+
+*NOTE: TAKING OUT LOG.SMOOTHNESS_SE HAS A HUGE EFFECT ON THE SIGNIFICANCE OF THE PREDICTORS!
+#todo: analyze
+#todo: plot the model
+
+# Stepwise Regression on First-order Model
 
 ```{r}
-par (mfrow = c(1, 2))
-hist (log(area_se))
-boxplot (log(area_se), horizontal = T, xlab="area_se", main="Boxplot of area_se")
-
-cancer$log_area_se = log(area_se)
-
+stepwise_model = step (model1, direction='both')
 ```
-
-With the log transformation, area_se is more symmetric. We will continue our analysis using the log transformation of this predictor.
 
 ```{r}
-par (mfrow = c(1, 2))
-hist (area_worst)
-boxplot (area_worst, horizontal = T, xlab="chlorides", main="Boxplot of chlorides")
-
+summary(stepwise_model)
 ```
 
-Area_worst is also very right skewed.
+Predictors texture_mean, symmetry_mean, fractal_dimension_mean, smoothness_worst, concave.points_worst, log.area_mean, log.area_se, log.area_worst, log.compactness_se, log.compactness_worst, log.concave.points_mean, log.concavity_mean, log.concavity_se, log.radius_worst, log.smoothness_se, and log.texture_se were removed from the model. Noteably, there are still no significant predictors in the model. 
+
+## Residuals of First-order Model
 
 ```{r}
-par (mfrow = c(1, 2))
-hist (log(area_worst))
-boxplot (log(area_worst), horizontal = T, xlab="area_worst", main="Boxplot of area_worst")
-
-cancer$log_area_worst = log(area_worst)
-
+par (mfrow=c(1,2))
+plot (stepwise_model, which=c(1,5))
 ```
 
-Area_worst is more symmetric with the log transformation. We will also continue our analysis with this predictor transformed.
 
-# Data Characteristics
+# Fitting a Model with Interactions
