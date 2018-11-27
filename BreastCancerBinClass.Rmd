@@ -150,7 +150,13 @@ Predictors texture_mean, symmetry_mean, fractal_dimension_mean, smoothness_worst
 ```{r}
 par (mfrow=c(1,2))
 plot (stepwise_model, which=c(1,5))
+
 ```
 
 
 # Fitting a Model with Interactions
+
+```{r}
+
+```
+
