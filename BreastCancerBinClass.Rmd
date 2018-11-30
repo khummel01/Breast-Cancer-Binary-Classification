@@ -107,56 +107,172 @@ attach(cancer2)
 
 The severly right-skewed predictors now have a more symmetric distribution with the log transformation applied. We will use these log transformed predictors as we proceed with our analysis.
 
+## Plots of Significant Predictors
 #todo: plots of the significant predictors after we have our final model
 
-# THIS IS A TEST, log.area_mean was randomly selected to look at 
+
+## Correlations and Scatter Plots
+
+We will first take a look at the coefficent of determination values in our data set to ascertain which predictors are highly correlated with one another.
+
+```{r}
+# NOTE: THIS IS COMMENTED OUT JUST TO SAVE SPACE. DO NOT DELETE.
+cancer2data_frame = data.frame(cancer2$diagnosis2, cancer2$radius_mean, cancer2$texture_mean, cancer2$perimeter_mean, cancer2$smoothness_mean, cancer2$symmetry_mean, cancer2$fractal_dimension_mean, cancer2$radius_se, cancer2$perimeter_se, cancer2$concave.points_se, cancer2$fractal_dimension_se, cancer2$texture_worst, cancer2$smoothness_worst, cancer2$concavity_worst, cancer2$concave.points_worst, cancer2$symmetry_worst, cancer2$fractal_dimension_worst, cancer2$log.area_mean, cancer2$log.area_se, cancer2$log.area_worst, cancer2$log.compactness_mean, cancer2$log.compactness_se, cancer2$log.compactness_worst, cancer2$log.concave.points_mean, cancer2$log.concavity_mean, cancer2$log.concavity_se, cancer2$log.perimeter_worst, cancer2$log.radius_worst, cancer2$log.smoothness_se, cancer2$log.symmetry_se, cancer2$log.texture_se)
+
+cormat = cor(cancer2data_frame, use="complete.obs")
+round (cormat, 2)
+
+```
+
+There appears to be many variables that are highly correlated with one another. The predictors that are highly correlated with diagnosis are concavity_worst (r=0.66), concave.points_worst (r=0.79), log.area_mean (r=0.73), log.area_se (r=0.72), log.area_worst (r=0.78), log.compactness_mean (r=0.60), log.concave.points_mean (r=0.68), log.concavity_mean (r=0.63), log.perimeter_worst (r=0.79), and log.radius_worst (r=0.79). The majority of the predictors are positively correlated with one another. The one negative correlation worth mentioning is between fractual dimension mean and radius worst and even this correlation is relatively weak with an r value of -0.29. Most stiking are the correlations between radius, perimeter, and area. For all three features computed for each image, mean, standard error, and "worst" (or largest mean of the three largest values), radius, perimeter, and area were all extremely correlated with one another, each achieving a r value of 0.96 or above. Perimeter mean and radius mean as well as area worst and radius worst even achieved a correlation of 1.00 
+
+We will now look at the scatter plots to visualize these significant correlations.
+
+Because there are many predictors in our data set, we will look at the correlation plots in groups of the cell nucleus's mean, standard error, and "worst" to more easily see the interactions happening amongst each grouping.
+
+Mean Predictors:
+
+```{r fig.height=8, fig.width=8}
+cancer2.mean = data.frame(cancer2$radius_mean, cancer2$texture_mean, cancer2$perimeter_mean, cancer2$log.area_mean, cancer2$smoothness_mean, cancer2$log.compactness_mean, cancer2$log.concavity_mean, cancer2$log.concave.points_mean, cancer2$symmetry_mean, cancer2$fractal_dimension_mean)
+
+pairs(cancer2.mean, pch=1)
+
+```
+
+Quite noteably, radius and perimeter mean, radius mean and log(area mean), and perimeter mean and log(area mean) are very highly correlated. Radius mean and perimeter mean appear to be linearly correlated whereas radius mean and log(area mean) and perimeter mean log(area mean) are non-linearly correlated. Log(compactness mean) and log(concavity mean), log(compactness mean) and log(concave points mean), and log(concave points mean) and log(concavity mean) also demonstrate strong correlations, although much more spread is present between these predictors than between radius mean with either perimeter mean or log(area mean).
+
+Standard Error Predictors:
+
+```{r fig.height=8, fig.width=8}
+cancer2.se = data.frame(cancer2$radius_se, cancer2$log.texture_se, cancer2$perimeter_se, cancer2$log.area_se, cancer2$log.smoothness_se, cancer2$log.compactness_se, cancer2$log.concavity_se, cancer2$concave.points_se, cancer2$log.symmetry_se, cancer2$fractal_dimension_se)
+
+pairs(cancer2.se, pch=1)
+
+```
+
+Area standard error and perimeter standard error, radius standard error and log(area standard error), and perimeter standard error and log(area standard error) are extremely correlated. Log(compactness standard error), log(concavity standard error),and concave points standard error are also highly correlated with one another, but with much more spread and noteably log(concavity standard error) and concave points standard error do not appear to be linearly correlated. Additionally, log(compactness standard error) and fractal dimension standard error and log(concavity standard error) and fractal dimension standard error are strongly correlated, but are not very linear.
+
+"Worst" Predictors:
+
+```{r fig.height=8, fig.width=8}
+cancer2.worst = data.frame(cancer2$log.radius_worst, cancer2$texture_worst, cancer2$log.perimeter_worst, cancer2$log.area_worst, cancer2$smoothness_worst, cancer2$log.compactness_worst, cancer2$concavity_worst, cancer2$concave.points_worst, cancer2$symmetry_worst, cancer2$fractal_dimension_worst)
+
+pairs(cancer2.worst, pch=1)
+
+```
+
+Log(radius worst) and log(perimeter worst), log(radius worst) and log(area worst), and log(perimeter worst) and log(area worst) are extremely correlated. These correlations are also very linear. There also appears to be a strong correlation between log(compactness worst) and concavity worst, log(compactness worst) and concave points worst, concavity worst and concave points worst, and compactness worst and fractal dimension worst although these correlations are not linear.
+
+
+
+Additional note, none of the predictor variables in breast cancer dataset are categorical, nor should be.
+
+#ASK: WHAT PREDICTOR TO USE IN PLOT?
 ```{r}
 plot (jitter (diagnosis2, 0.1) ~ log.area_mean, xlab="Age, years", ylab="Disease Status (0=No, 1=Yes)")
 lines (lowess (log.area_mean, diagnosis2), col='darkgreen')
-```
 
+```
 
 # First-order Logistic Regression Model
 
 A first-order logistic regression model that was fit using all 30 predictors, log transformations applied.
 
 ```{r}
-model1 <- glm(diagnosis ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + symmetry_mean + fractal_dimension_mean + radius_se + perimeter_se + concave.points_se + fractal_dimension_se + texture_worst + smoothness_worst + concavity_worst + concave.points_worst + symmetry_worst + fractal_dimension_worst + log.area_mean + log.area_se + log.area_worst + log.compactness_mean + log.compactness_se + log.compactness_worst + log.concave.points_mean + log.concavity_mean + log.concavity_se + log.perimeter_worst + log.radius_worst + log.smoothness_se + log.symmetry_se + log.texture_se, family=binomial, data=cancer2)
+model1 <- glm(diagnosis2 ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + symmetry_mean + fractal_dimension_mean + radius_se + perimeter_se + concave.points_se + fractal_dimension_se + texture_worst + smoothness_worst + concavity_worst + concave.points_worst + symmetry_worst + fractal_dimension_worst + log.area_mean + log.area_se + log.area_worst + log.compactness_mean + log.compactness_se + log.compactness_worst + log.concave.points_mean + log.concavity_mean + log.concavity_se + log.perimeter_worst + log.radius_worst + log.smoothness_se + log.symmetry_se + log.texture_se, family=binomial, data=cancer2)
 
 summary(model1)
 exp (model1$coefficients)
 ```
 
+#a.) which ones are significant?
+#b.) which ones are highly co-linear?
+
 There appears to be no significant predictors in the model. 
 
 *NOTE: TAKING OUT LOG.SMOOTHNESS_SE HAS A HUGE EFFECT ON THE SIGNIFICANCE OF THE PREDICTORS!
-#todo: analyze
-#todo: plot the model
 
-# Stepwise Regression on First-order Model
-
-```{r}
-stepwise_model = step (model1, direction='both')
-```
-
-```{r}
-summary(stepwise_model)
-```
-
-Predictors texture_mean, symmetry_mean, fractal_dimension_mean, smoothness_worst, concave.points_worst, log.area_mean, log.area_se, log.area_worst, log.compactness_se, log.compactness_worst, log.concave.points_mean, log.concavity_mean, log.concavity_se, log.radius_worst, log.smoothness_se, and log.texture_se were removed from the model. Noteably, there are still no significant predictors in the model. 
-
-## Residuals of First-order Model
+### Residuals of the First-order Model
 
 ```{r}
 par (mfrow=c(1,2))
-plot (stepwise_model, which=c(1,5))
+plot (model1, which=c(1,5))
+
+```
+
+#c. any evidence of curvature in the residuals?
+
+
+#todo: plot the model
+
+
+
+# Model Selection
+
+## Stepwise Regression on First-order Model
+
+
+
+```{r}
+#todo: take out most highly correlated predictors, save for one
+#todo: explain why perimeter_mean, se, worst and area_mean, se, worst were taken out
+
+min.model = glm(diagnosis2 ~ 1, family=binomial, data=cancer2)
+
+fwd.model = step(min.model, direction='forward', scope=(~ smoothness_mean + symmetry_mean + fractal_dimension_mean + radius_se  + concave.points_se + concavity_worst + fractal_dimension_worst + log.compactness_mean  + log.compactness_worst + log.concavity_mean + log.concavity_se  + log.radius_worst + log.smoothness_se + log.symmetry_se + log.texture_se))
+
+```
+
+```{r}
+summary(fwd.model)
+```
+
+### Residuals of Step-wise Model
+
+```{r}
+par (mfrow=c(1,2))
+plot (fwd.model, which=c(1,5))
 
 ```
 
 
-# Fitting a Model with Interactions
+
+### ROC Curve and AUC Analysis of Best First-order Model
 
 ```{r}
 
 ```
 
+
+
+## Fitting a Model with Interactions
+
+```{r}
+# Centering the predictors
+
+detach (cancer2)
+my.center = function (x) (x - mean (x))
+cancer2$radius_mena.c = my.center (cancer2$radius_mean)
+cancer2$texture_mean.c = my.center (cancer2$texture_mean.c)
+cancer2$perimeter_mean.c = my.center (cancer2$perimeter_mean.c)
+cancer2$smoothness_mean.c = my.center (cancer2$smoothness_mean.c)
+cancer2$pH.c = my.center (cancer2$pH)
+cancer2$sulphates.c = my.center (cancer2)
+cancer2$alcohol.c = my.center (cancer2$alcohol)
+attach(cancer2)
+
+Hpower.levels = cut(Hpower, breaks-quantile(Hpower), 1:4)
+pairs(cbind.data.frame(MPG, Hpower, Year), col=Hpower.levels)
+
+```
+
+
+```{r}
+disout.data$age.c = age - mean(age)
+m3 = glm (disease ~ (age.c + as.factor(socio) + sector)^2, family=binomial,
+data=disout.data)
+summary (m3)
+```
+
+
+## Stepwise Regression
