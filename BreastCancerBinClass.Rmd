@@ -57,7 +57,8 @@ table(diagnosis2)
 ```
 
 ```{r}
-barplot(table(diagnosis2), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="Count", ylim=c(0, 450))
+ barplot (table (ifelse (cancer2$diagnosis2==1, "Benign", "Malignant")), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="# of Images", ylim=c(0, 450))
+
 ```
 
 ```{r}
@@ -68,7 +69,7 @@ ggplot(gather(cancer), aes(value)) +
 
 ```
 
-The table of benign and malignant tumor counts and bar plot above show that out of the 569 images of breast masses collected, 357 of them were benign and 212 malignant. As indicated by the distribution plot of each variable above, it appears that predictors area_mean, area_se, area_worst, compactness_mean, compactness_se, compactness_worst, concave.points.mean, concavity_mean, concavity_se, perimeter_worst, radius_worst, smoothness_se, symmetry_se, and texture_se are clearly right-skewed. Transformations are needed to make these distributions more symmetric.
+The table of benign and malignant tumor counts and bar plot above show that out of the 569 images of breast masses collected, 357 of them were benign and 212 malignant. As indicated by the distribution plot of each variable above, it appears that predictors area mean, area standard error, area "worst", compactness mean, compactness standard error, compactness worst, concave points mean, concavity mean, concavity standard error, perimeter worst, radius worst, smoothness standard error, symmetry standard error, and texture standard error are clearly right-skewed. Transformations are needed to make these distributions more symmetric.
 
 ```{r}
 # Adding the log transformed predictors to the data set
@@ -108,7 +109,8 @@ attach(cancer2)
 The severly right-skewed predictors now have a more symmetric distribution with the log transformation applied. We will use these log transformed predictors as we proceed with our analysis.
 
 ## Plots of Significant Predictors
-#todo: plots of the significant predictors after we have our final model
+
+
 
 
 ## Correlations and Scatter Plots
@@ -164,33 +166,60 @@ pairs(cancer2.worst, pch=1)
 Log(radius worst) and log(perimeter worst), log(radius worst) and log(area worst), and log(perimeter worst) and log(area worst) are extremely correlated. These correlations are also very linear. There also appears to be a strong correlation between log(compactness worst) and concavity worst, log(compactness worst) and concave points worst, concavity worst and concave points worst, and compactness worst and fractal dimension worst although these correlations are not linear.
 
 
-
 Additional note, none of the predictor variables in breast cancer dataset are categorical, nor should be.
 
 #ASK: WHAT PREDICTOR TO USE IN PLOT?
 ```{r}
-plot (jitter (diagnosis2, 0.1) ~ log.area_mean, xlab="Age, years", ylab="Disease Status (0=No, 1=Yes)")
-lines (lowess (log.area_mean, diagnosis2), col='darkgreen')
+plot (jitter (cancer2$diagnosis2, 0.1) ~ cancer2$texture_worst, cancer2$radius_mean, xlab="Age, years", ylab="Disease Status (0=No, 1=Yes)")
+# lines (lowess (log.area_mean, diagnosis2), col='darkgreen')
 
 ```
 
 # First-order Logistic Regression Model
 
-A first-order logistic regression model that was fit using all 30 predictors, log transformations applied.
+Fitting a model with all 30 predictors was not computationally viable as all 30 predictors caused the model to overfit the data. We first manually removed predictors perimeter and area for all three features (mean, standard error, and "worst") because of their high correlation with radius, then from there, removed predictors based on p-values until we no longer received warning that the model was being overfit, so we ended up with only four predictors in our model.
 
 ```{r}
-model1 <- glm(diagnosis2 ~ radius_mean + texture_mean + perimeter_mean + smoothness_mean + symmetry_mean + fractal_dimension_mean + radius_se + perimeter_se + concave.points_se + fractal_dimension_se + texture_worst + smoothness_worst + concavity_worst + concave.points_worst + symmetry_worst + fractal_dimension_worst + log.area_mean + log.area_se + log.area_worst + log.compactness_mean + log.compactness_se + log.compactness_worst + log.concave.points_mean + log.concavity_mean + log.concavity_se + log.perimeter_worst + log.radius_worst + log.smoothness_se + log.symmetry_se + log.texture_se, family=binomial, data=cancer2)
+model1 <- glm(diagnosis2 ~ concave.points_se + fractal_dimension_se + fractal_dimension_worst + log.radius_worst, family=binomial, data=cancer2)
 
 summary(model1)
 exp (model1$coefficients)
 ```
 
-#a.) which ones are significant?
-#b.) which ones are highly co-linear?
+Because we manually removed predictors based on p-values to avoid overfitting our model, all four predictors in our first-order model are significant at $\alpha = .001$ with log.radius_worst being the most signicant predictor with a p-value of 3.26e-16. With each additional unit of fractal_dimension_se we expect the odds of the breast mass being malignant to increase by 0%. With each additional unit of concave.points_se, fractal_dimension_worst, and log.radius_worst the odds of the breast mass being malignant decrease by 0%.
 
-There appears to be no significant predictors in the model. 
+### Plot of First-order Model
 
-*NOTE: TAKING OUT LOG.SMOOTHNESS_SE HAS A HUGE EFFECT ON THE SIGNIFICANCE OF THE PREDICTORS!
+```{r}
+# Celia
+
+# plot(cancer $age, jitter(disout.data$disease, .1), col=ifelse (sector==0, "red", "blue"))
+# ageseq = seq (min(age), max(age), by=1)
+# fitprob0 = predict (disease.logit, data.frame (age=ageseq, socio="Upper", sector=0), type='response')
+# lines (ageseq, fitprob0, col='red')
+# fitprob1 = predict (disease.logit, data.frame (age=ageseq, socio="Upper", sector=1),
+# type='response') lines (ageseq, fitprob1, col='blue')
+# legend(1,0.9,c('Sector 0','Sector 1'),lty=c(1,1),lwd=c(2.5,2.5), cex=0.8, col=c("red","blue"))
+
+ggplot(cancer2, aes(x=, y=diagnosis2)) + geom_point() + 
+  stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE)
+
+```
+
+
+
+
+
+
+```{r}
+sumModel1 = summary (model1, correlation = T)
+corrplot (sumModel1$correlation, method="number", number.cex=0.6)
+model1.data.frame = data.frame(cancer2$diagnosis2, cancer2$concave.points_se, cancer2$fractal_dimension_se, cancer2$fractal_dimension_worst, cancer2$log.radius_worst)
+pairs(model1.data.frame, pch=1)
+
+```
+
+There are no two predictors that are highly co-linear, however, predictors fractal_dimension_se and concave.points_se and fractal_dimension_worst and fractal_dimension_se are highly correlated at r=-0.79 and r=-0.75 respectively. 
 
 ### Residuals of the First-order Model
 
@@ -200,23 +229,17 @@ plot (model1, which=c(1,5))
 
 ```
 
-#c. any evidence of curvature in the residuals?
+The Residuals vs Fitted plot provides evidence that the model fits the data fairly well since the Lowess line is relatively flat and close to zero, although there is a a small spike in the Lowess line towards the middle of the graph, however this is normal for residuals vs fitted plots of logistic regression models. This plot suggests the presence of three outliers, observations 298, 42, and 136. The Residuals vs Leverage Plot suggests the presence of a few influential points in the data as indicated by the presence of Cook's distance contour lines on the graph. However, although points 298 and 42 come close to the contour lines, they are not outside of these lines and thus, are not of concern to us.
 
-
-#todo: plot the model
-
-
+We will refit the model a few more times before deciding whether or not observations 298, 42, and 136 really are outliers and need to be removed from the data.
 
 # Model Selection
 
 ## Stepwise Regression on First-order Model
 
-
+In the first-order model, we had to slim down the number of predictors beforing fitting the model, as doing otherwise resulted in a warning stating that the given model overfit the data. This same warning appeared when we attempted a "both" stepwise regression model with all 30 predictors. To resolve this issue, we first took out predictors perimeter and area for all three features (mean, standard error, and "worst"), because of how highly correlated they are with radius, and attempted to fit the model again, but encountered the same error. At this point we switched from a "both" stepwise regression model, to "forward" regression, then proceeded to resolve the error through manually taking out the offending predictor until the stepwise could proceed without any warnings of the model overfitting the data. The collection of predictors that gave us no errors when attemping to fit a model using "forward" stepwise regression is what is displayed in the code below.
 
 ```{r}
-#todo: take out most highly correlated predictors, save for one
-#todo: explain why perimeter_mean, se, worst and area_mean, se, worst were taken out
-
 min.model = glm(diagnosis2 ~ 1, family=binomial, data=cancer2)
 
 fwd.model = step(min.model, direction='forward', scope=(~ smoothness_mean + symmetry_mean + fractal_dimension_mean + radius_se  + concave.points_se + concavity_worst + fractal_dimension_worst + log.compactness_mean  + log.compactness_worst + log.concavity_mean + log.concavity_se  + log.radius_worst + log.smoothness_se + log.symmetry_se + log.texture_se))
@@ -227,7 +250,18 @@ fwd.model = step(min.model, direction='forward', scope=(~ smoothness_mean + symm
 summary(fwd.model)
 ```
 
-### Residuals of Step-wise Model
+The forward stepwise regression ended with a total of six predictors that resulted in the lowest AIC value of 123.95, an improvement from the first-order model with an AIC of 145.85. These predictors are log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean, and fractal_dimension_worst. Log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean are all significant at $\alpha = .001$ with fractal_dimension_worst significant at $\alpha = .01$. The most significant predictor is log.radius_worst with a p-value of 3.62e-14. 
+
+For each additional unit of any one predictor in the forward stepwise regreesion model, the odds of the breast mass being malignant increases by over 100%.
+
+### Plot of Stepwise Model
+
+```{r}
+#Celia
+
+```
+
+### Residuals of Stepwise Model
 
 ```{r}
 par (mfrow=c(1,2))
@@ -235,44 +269,23 @@ plot (fwd.model, which=c(1,5))
 
 ```
 
-
+The Residuals vs Fitted plot looks reasonable and it appears that the model fits the data very well as indicated by the flat Lowess line and how close to zero it resides. Interestingly, observation 298 was highlighted as a potential outlier again, but 136 and 42 were not from the previous model. Instead, observations 14 and 41 are now indicated as potential outliers along with 298. The Residuals vs Leverage Plot suggests the presence of a few influential points in the data as indicated by the presence of Cook's distance contour lines on the graph. However, although points 298, 69, and 529 come close to the contour lines so they do not concern us.
 
 ### ROC Curve and AUC Analysis of Best First-order Model
 
 ```{r}
+#Celia
 
 ```
-
-
 
 ## Fitting a Model with Interactions
+a.) Include interaction effects from Step 5
+b.) Apply stepwise regression using the step function
+c.) What are the results?
+d.) Which model(s) seems(s) to be best?
 
 ```{r}
-# Centering the predictors
-
-detach (cancer2)
-my.center = function (x) (x - mean (x))
-cancer2$radius_mena.c = my.center (cancer2$radius_mean)
-cancer2$texture_mean.c = my.center (cancer2$texture_mean.c)
-cancer2$perimeter_mean.c = my.center (cancer2$perimeter_mean.c)
-cancer2$smoothness_mean.c = my.center (cancer2$smoothness_mean.c)
-cancer2$pH.c = my.center (cancer2$pH)
-cancer2$sulphates.c = my.center (cancer2)
-cancer2$alcohol.c = my.center (cancer2$alcohol)
-attach(cancer2)
-
-Hpower.levels = cut(Hpower, breaks-quantile(Hpower), 1:4)
-pairs(cbind.data.frame(MPG, Hpower, Year), col=Hpower.levels)
+# Laura
 
 ```
 
-
-```{r}
-disout.data$age.c = age - mean(age)
-m3 = glm (disease ~ (age.c + as.factor(socio) + sector)^2, family=binomial,
-data=disout.data)
-summary (m3)
-```
-
-
-## Stepwise Regression
