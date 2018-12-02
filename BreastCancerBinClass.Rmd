@@ -18,6 +18,9 @@ library ("MASS")
 library(car)
 library(lmtest)
 library(magrittr)
+library (rpart)
+library(ROCR)
+
 ```
 
 # Abstract 
@@ -118,7 +121,6 @@ The severly right-skewed predictors now have a more symmetric distribution with 
 We will first take a look at the coefficent of determination values in our data set to ascertain which predictors are highly correlated with one another.
 
 ```{r}
-# NOTE: THIS IS COMMENTED OUT JUST TO SAVE SPACE. DO NOT DELETE.
 cancer2data_frame = data.frame(cancer2$diagnosis2, cancer2$radius_mean, cancer2$texture_mean, cancer2$perimeter_mean, cancer2$smoothness_mean, cancer2$symmetry_mean, cancer2$fractal_dimension_mean, cancer2$radius_se, cancer2$perimeter_se, cancer2$concave.points_se, cancer2$fractal_dimension_se, cancer2$texture_worst, cancer2$smoothness_worst, cancer2$concavity_worst, cancer2$concave.points_worst, cancer2$symmetry_worst, cancer2$fractal_dimension_worst, cancer2$log.area_mean, cancer2$log.area_se, cancer2$log.area_worst, cancer2$log.compactness_mean, cancer2$log.compactness_se, cancer2$log.compactness_worst, cancer2$log.concave.points_mean, cancer2$log.concavity_mean, cancer2$log.concavity_se, cancer2$log.perimeter_worst, cancer2$log.radius_worst, cancer2$log.smoothness_se, cancer2$log.symmetry_se, cancer2$log.texture_se)
 
 cormat = cor(cancer2data_frame, use="complete.obs")
@@ -175,69 +177,91 @@ plot (jitter (cancer2$diagnosis2, 0.1) ~ cancer2$texture_worst, cancer2$radius_m
 
 ```
 
-# First-order Logistic Regression Model
+# First-order Tree Regression Model
 
-Fitting a model with all 30 predictors was not computationally viable as all 30 predictors caused the model to overfit the data. We first manually removed predictors perimeter and area for all three features (mean, standard error, and "worst") because of their high correlation with radius, then from there, removed predictors based on p-values until we no longer received warning that the model was being overfit, so we ended up with only four predictors in our model.
-
-```{r}
-model1 <- glm(diagnosis2 ~ concave.points_se + fractal_dimension_se + fractal_dimension_worst + log.radius_worst, family=binomial, data=cancer2)
-
-summary(model1)
-exp (model1$coefficients)
-```
-
-Because we manually removed predictors based on p-values to avoid overfitting our model, all four predictors in our first-order model are significant at $\alpha = .001$ with log.radius_worst being the most signicant predictor with a p-value of 3.26e-16. With each additional unit of fractal_dimension_se we expect the odds of the breast mass being malignant to increase by 0%. With each additional unit of concave.points_se, fractal_dimension_worst, and log.radius_worst the odds of the breast mass being malignant decrease by 0%.
-
-### Plot of First-order Model
+Fitting a model with all 30 predictors was not computationally viable using logistic regression as all 30 predictors caused the model to overfit the data, so we decided to fit a first-order model using tree regression instead.
 
 ```{r}
-# Celia
+cancer.tree_model <- rpart(cancer2$diagnosis2 ~ cancer2$radius_mean + cancer2$texture_mean + cancer2$perimeter_mean + cancer2$smoothness_mean + cancer2$symmetry_mean + cancer2$fractal_dimension_mean + cancer2$radius_se + cancer2$perimeter_se + cancer2$concave.points_se + cancer2$fractal_dimension_se + cancer2$texture_worst + cancer2$smoothness_worst + cancer2$concavity_worst + cancer2$concave.points_worst + cancer2$symmetry_worst + cancer2$fractal_dimension_worst + cancer2$log.area_mean + cancer2$log.area_se + cancer2$log.area_worst + cancer2$log.compactness_mean + cancer2$log.compactness_se + cancer2$log.compactness_worst + cancer2$log.concave.points_mean + cancer2$log.concavity_mean + cancer2$log.concavity_se + cancer2$log.perimeter_worst + cancer2$log.radius_worst + cancer2$log.smoothness_se + cancer2$log.symmetry_se + cancer2$log.texture_se)
 
-# plot(cancer $age, jitter(disout.data$disease, .1), col=ifelse (sector==0, "red", "blue"))
-# ageseq = seq (min(age), max(age), by=1)
-# fitprob0 = predict (disease.logit, data.frame (age=ageseq, socio="Upper", sector=0), type='response')
-# lines (ageseq, fitprob0, col='red')
-# fitprob1 = predict (disease.logit, data.frame (age=ageseq, socio="Upper", sector=1),
-# type='response') lines (ageseq, fitprob1, col='blue')
-# legend(1,0.9,c('Sector 0','Sector 1'),lty=c(1,1),lwd=c(2.5,2.5), cex=0.8, col=c("red","blue"))
-
-ggplot(cancer2, aes(x=, y=diagnosis2)) + geom_point() + 
-  stat_smooth(method="glm", method.args=list(family="binomial"), se=FALSE)
-
+par (mfrow=c(1,1))
+plot(cancer.tree_model, uniform = TRUE, margin = 0.1, branch = 0.5,
+ compress = TRUE)
+text(cancer.tree_model)
 ```
 
+This tree says that log(radius worst) is the single most important predictor in determining if a breast mass is malignant or not. Other significant predictors include texture mean, concave points worst, and texture worst. A breast mass is most likely to be malignant if its log(radius worst) is greater than 2.821 and has a concave points worst value greater than 0.1358. The probability of a breast mass being malignant given these conditions is 98.5%. A breast mass is least likely to be cancerous if its log(radius worst) is less than 2.821 and its texture mean is less than 16.11; this is a probability of 1.16%. There is about a 50/50 chance that the breast mass is malignant if its log(radius worst) is less than 2.821 and its texture mean is greater than 16.11. 
 
-
-
-
+### ROC Curve of First-order Model
 
 ```{r}
-sumModel1 = summary (model1, correlation = T)
-corrplot (sumModel1$correlation, method="number", number.cex=0.6)
-model1.data.frame = data.frame(cancer2$diagnosis2, cancer2$concave.points_se, cancer2$fractal_dimension_se, cancer2$fractal_dimension_worst, cancer2$log.radius_worst)
-pairs(model1.data.frame, pch=1)
+roc.tree = function (fit) {
+ if (fit$method=="anova") {
+ fitvals = predict(fit)
+ }
+ else {
+ fitvals = predict(fit) [,2]
+ }
+
+ pred1 <- prediction(fitvals, fit$y)
+ perf1 <- performance(pred1,"tpr","fpr")
+ auc1 <- performance(pred1,"auc")@y.values[[1]]
+ plot(perf1, lwd=2, col=2)
+ abline(0,1)
+ legend(0.25, 0.2, c(paste ("AUC=", round(auc1, 2), sep="")),
+ cex=0.8, lwd=2, col=2)
+ roc.table = cbind.data.frame (pred1@tn, pred1@fp, pred1@fn, pred1@tp,
+ pred1@cutoffs, perf1@x.values,
+perf1@y.values)
+ roc.table$spec = 1 - perf1@x.values[[1]]
+ roc.table$ppv = pred1@tp[[1]] / (pred1@tp[[1]] + pred1@fp[[1]])
+ roc.table$npv = pred1@tn[[1]] / (pred1@tn[[1]] + pred1@fn[[1]])
+ roc.table$pctcorr = (pred1@tn[[1]] + pred1@tp[[1]]) /
+ (pred1@tn[[1]] + pred1@tp[[1]] + pred1@fn[[1]] + pred1@fp[[1]])
+ roc.table$optdist = sqrt ((perf1@x.values[[1]] - 0)^2 +
+ (perf1@y.values[[1]] - 1)^2)
+ names (roc.table) = c("TN", "FP", "FN", "TP", "Cutoff", "FPR", "TPR",
+"Spec",
+ "PPV", "NPV", "PctCorr", "OptDist")
+ return (roc.table)
+}
+roc1 = roc.tree (cancer.tree_model)
 
 ```
 
-There are no two predictors that are highly co-linear, however, predictors fractal_dimension_se and concave.points_se and fractal_dimension_worst and fractal_dimension_se are highly correlated at r=-0.79 and r=-0.75 respectively. 
+The ROC curve for the tree regression model looks very good. Our tree model can accurately distinguish between whether a breast mass is malignant or benign.
+
+### Correlations of Significant Predictors
+
+```{r}
+cancer.tree_model_df = data.frame(cancer2$diagnosis2, cancer2$log.radius_worst, cancer2$texture_mean, cancer2$concave.points_worst, cancer2$texture_worst)
+pairs(cancer.tree_model_df, pch=1)
+
+```
+
+Predictors texture mean and texture worst have a strong positive linear correlation at r=0.91. Log(radius worst) and concave points mean also have a significant positive linear correlation with one another, however this correlation is not as strong with an r value of 0.79.
 
 ### Residuals of the First-order Model
 
 ```{r}
-par (mfrow=c(1,2))
-plot (model1, which=c(1,5))
+# par (mfrow=c(1,2))
+# plot (cancer.tree_model, which=c(1,5))
+
+plot (predict(cancer.tree_model), residuals(cancer.tree_model), main="Diagnosis vs
+Predicted")
+abline (0, 0, col='red')
+resid.se = sd (residuals (cancer.tree_model))
+legend (0.7, 0.8, c(paste ("Resid SE=", round (resid.se, 4))), cex=0.8)
 
 ```
 
-The Residuals vs Fitted plot provides evidence that the model fits the data fairly well since the Lowess line is relatively flat and close to zero, although there is a a small spike in the Lowess line towards the middle of the graph, however this is normal for residuals vs fitted plots of logistic regression models. This plot suggests the presence of three outliers, observations 298, 42, and 136. The Residuals vs Leverage Plot suggests the presence of a few influential points in the data as indicated by the presence of Cook's distance contour lines on the graph. However, although points 298 and 42 come close to the contour lines, they are not outside of these lines and thus, are not of concern to us.
-
-We will refit the model a few more times before deciding whether or not observations 298, 42, and 136 really are outliers and need to be removed from the data.
+#todo: ask why only 10 points are appearing on the plot
 
 # Model Selection
 
 ## Stepwise Regression on First-order Model
 
-In the first-order model, we had to slim down the number of predictors beforing fitting the model, as doing otherwise resulted in a warning stating that the given model overfit the data. This same warning appeared when we attempted a "both" stepwise regression model with all 30 predictors. To resolve this issue, we first took out predictors perimeter and area for all three features (mean, standard error, and "worst"), because of how highly correlated they are with radius, and attempted to fit the model again, but encountered the same error. At this point we switched from a "both" stepwise regression model, to "forward" regression, then proceeded to resolve the error through manually taking out the offending predictor until the stepwise could proceed without any warnings of the model overfitting the data. The collection of predictors that gave us no errors when attemping to fit a model using "forward" stepwise regression is what is displayed in the code below.
+In the first-order model, we used tree regression to avoid overfitting the data. When we attempted a "both" stepwise regression model with all 30 predictors, we again encountered the issue of overfitting the data. To resolve this problem, we first took out predictors perimeter and area for all three features (mean, standard error, and "worst"), because of how highly correlated they are with radius, and attempted to fit the model again, but encountered the same error. At this point we switched from a "both" stepwise regression model, to "forward" regression, then proceeded to resolve the overfitting error through manually taking out the offending predictor until the stepwise could proceed without any warnings of the model overfitting the data. The collection of predictors that gave us no errors when attemping to fit a model using "forward" stepwise regression is what is displayed in the code below.
 
 ```{r}
 min.model = glm(diagnosis2 ~ 1, family=binomial, data=cancer2)
