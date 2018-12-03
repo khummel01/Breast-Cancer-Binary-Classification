@@ -349,7 +349,7 @@ b.) Make some example response predictions with confidence intervals and interpr
 
 The following tables show some example predicted probabilities and their confidence intervals for subjects.
 ```{r}
-# Change variables
+# Change variables!!!
 
 # With logistic regression, the predict function does not provide confidence limits, even with the interval= option.  Instead, we request the se.fit=T option and calculate our own limits on the logist scale, and then back-transform to the probability scale.
 preds = predict (m.both, se.fit = T)
@@ -369,7 +369,8 @@ pred.df [c(30,47,78,21,16,11), c(2,5:7,14:16)]
 
 The following table summarizes the observed and predicted classifications of disease:
 ```{r}
-# Change variables
+# Change variables!!!
+
 pred.df$pred.dis = ifelse (pred.df$fit.pr >= auc.best$Cutoff[1], "Pred.Yes", "Pred.No")
 table (pred.df$disease, pred.df$pred.dis)
 ```
