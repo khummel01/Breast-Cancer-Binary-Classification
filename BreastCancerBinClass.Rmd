@@ -23,7 +23,11 @@ library(ROCR)
 
 ```
 
+# Title 
+Predicting Malignancy of Breast Mass
+
 # Abstract 
+This report examines 569 breast masses using linear regression methods. The primary goal is to determine what predictor variables are most effective at predicting the malignancy of a breast mass, as well as to see if there is a certain combination of predictor variables that most accurately predicts malignancy. The ten predictor variables were radius (mean of distances from center to points on the perimeter), texture (standard deviation of gray-scale values), perimeter, area, smoothness (local variation in radius lengths), compactness (perimeter^2/area – 1), concavity (severity of concave portions of the contour), symmetry, and fractal dimension (“coastline approximation”-1). The response variable was the diagnosis of malignant (represented by 1) or benign (represented by 0).
 
 # Introduction
 
@@ -299,7 +303,34 @@ The Residuals vs Fitted plot looks reasonable and it appears that the model fits
 
 ```{r}
 #Celia
+par (mfrow=c(1,1))
+pred1 <- prediction(m.both$fitted.values, m.both$y) ## change to stepwise results
+perf1 <- performance(pred1,"tpr","fpr")
+auc1 <- performance(pred1,"auc")@y.values[[1]]
+auc1
 
+plot(perf1, lwd=2, col=2)
+abline(0,1)
+legend(0.6, 0.3, c(paste ("AUC=", round (auc1, 4), sep="")),   lwd=2, col=2)
+
+# Extract the X and Y values from the ROC plot, as well as the probability cutoffs
+roc.x = slot (perf1, "x.values") [[1]]
+roc.y = slot (perf1, "y.values") [[1]]
+cutoffs = slot (perf1, "alpha.values") [[1]]
+
+auc.table = cbind.data.frame(cutoff=pred1@cutoffs,tp=pred1@tp, fp=pred1@fp, tn=pred1@tn, fn=pred1@fn)
+names (auc.table) = c("Cutoff", "TP", "FP", "TN", "FN")
+auc.table$sensitivity = auc.table$TP / (auc.table$TP + auc.table$FN)
+auc.table$specificity = auc.table$TN / (auc.table$TN + auc.table$FP)
+auc.table$FalsePosRate = 1 - auc.table$specificity
+auc.table$sens_spec = auc.table$sensitivity + auc.table$specificity
+
+# Find the row(s) in the AUC table where sensitivity + specificity is maximized
+auc.best = auc.table [auc.table$sens_spec == max (auc.table$sens_spec),]
+auc.best
+
+# Plot the maximum point(s) on the ROC plot
+points (auc.best$FalsePosRate, auc.best$sensitivity, cex=1.3)
 ```
 
 ## Fitting a Model with Interactions
