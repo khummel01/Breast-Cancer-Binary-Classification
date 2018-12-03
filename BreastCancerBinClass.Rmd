@@ -357,7 +357,9 @@ auc.best
 # Plot the maximum point(s) on the ROC plot
 points (auc.best$FalsePosRate, auc.best$sensitivity, cex=1.3)
 ```
+The ROC curve suggests the predictive ability of this model is better than random guessing, since the AUC (0.99) is larger than 0.5. Our forward stepwise model can accurately distinguish between whether a breast mass is malignant or benign. An AUC value of 0.99 tells us that our forward stepwise model can accurately predict whether or not a breast mass is malignant or benign 99% of the time given this data set.
 
+The optimal cutoff for classification is a fitted probability of 0.419, which has a false positive rate (1 - specificity) of 0.03, and a true positive rate (sensitivity) of 0.95. That point is shown as a black circle on the ROC curve.
 
 
 ```{r}
