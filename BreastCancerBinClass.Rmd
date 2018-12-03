@@ -304,7 +304,7 @@ The Residuals vs Fitted plot looks reasonable and it appears that the model fits
 ```{r}
 #Celia
 par (mfrow=c(1,1))
-pred1 <- prediction(m.both$fitted.values, m.both$y) ## change to stepwise results
+pred1 <- prediction(fwd.model$fitted.values, fwd.model$y)
 perf1 <- performance(pred1,"tpr","fpr")
 auc1 <- performance(pred1,"auc")@y.values[[1]]
 auc1
