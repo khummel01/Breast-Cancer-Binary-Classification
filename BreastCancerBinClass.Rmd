@@ -343,4 +343,33 @@ d.) Which model(s) seems(s) to be best?
 # Laura
 
 ```
+## Interpretation
+a.) Meaning/interpretation of regression parameters
+b.) Make some example response predictions with confidence intervals and interpret those results
 
+The following tables show some example predicted probabilities and their confidence intervals for subjects.
+```{r}
+# Change variables
+
+# With logistic regression, the predict function does not provide confidence limits, even with the interval= option.  Instead, we request the se.fit=T option and calculate our own limits on the logist scale, and then back-transform to the probability scale.
+preds = predict (m.both, se.fit = T)
+pred.df = cbind.data.frame (disout.data, as.data.frame (preds))
+
+pred.df$lwr = pred.df$fit - 1.96 * pred.df$se.fit
+pred.df$upr = pred.df$fit + 1.96 * pred.df$se.fit
+
+pred.df$fit.pr = round (exp (pred.df$fit) / (1 + exp (pred.df$fit)), 3)
+pred.df$lwr.pr = round (exp (pred.df$lwr) / (1 + exp (pred.df$lwr)), 3)
+pred.df$upr.pr = round (exp (pred.df$upr) / (1 + exp (pred.df$upr)), 3)
+
+# Selected subjects in their 20's
+pred.df [c(30,47,78,21,16,11), c(2,5:7,14:16)]
+
+```
+
+The following table summarizes the observed and predicted classifications of disease:
+```{r}
+# Change variables
+pred.df$pred.dis = ifelse (pred.df$fit.pr >= auc.best$Cutoff[1], "Pred.Yes", "Pred.No")
+table (pred.df$disease, pred.df$pred.dis)
+```
