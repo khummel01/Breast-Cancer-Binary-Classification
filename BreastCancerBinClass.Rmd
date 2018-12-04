@@ -27,11 +27,7 @@ library(ROCR)
 Predicting Malignancy of Breast Mass from Digitalized Images
 
 # Abstract 
-<<<<<<< HEAD
-This report examines 569 images of breast masses using linear regression methods. The primary goal is to determine what predictor variables are most effective at predicting the malignancy of a breast mass, as well as to see if there is a certain combination of predictor variables that most accurately predicts malignancy. The ten predictor variables were radius (mean of distances from center to points on the perimeter), texture (standard deviation of gray-scale values), perimeter, area, smoothness (local variation in radius lengths), compactness (perimeter^2/area – 1), concavity (severity of concave portions of the contour), symmetry, and fractal dimension (“coastline approximation”-1). The response variable was the diagnosis of malignant (represented by 1) or benign (represented by 0).
-=======
-This report examines 569 breast masses using logistic regression methods. The primary goal is to determine what predictor variables are most effective at predicting the malignancy of a breast mass, as well as to see if there is a certain combination of predictor variables that most accurately predicts malignancy. The ten predictor variables were radius (mean of distances from center to points on the perimeter), texture (standard deviation of gray-scale values), perimeter, area, smoothness (local variation in radius lengths), compactness (perimeter^2/area – 1), concavity (severity of concave portions of the contour), symmetry, and fractal dimension (“coastline approximation”-1). We have thirty total predictor variables because the mean, standard error, and "worst" value are taken for each of these ten variables. The worst value is the largest mean of the value for each predictor. The response variable was the diagnosis of malignant (represented by 1) or benign (represented by 0). 
->>>>>>> 72fdf5fafe0fa5d6b751c28f074e5bba12078cea
+This report examines 569 breast masses using logistic regression methods. The primary goal is to determine what predictor variables are most effective at predicting the malignancy of a breast mass, as well as to see if there is a certain combination of predictor variables that most accurately predicts malignancy. The ten predictor variables were radius (mean of distances from center to points on the perimeter), texture (standard deviation of gray-scale values), perimeter, area, smoothness (local variation in radius lengths), compactness (perimeter^2/area – 1), concavity (severity of concave portions of the contour), symmetry, and fractal dimension (“coastline approximation”-1). We have thirty total predictor variables because the mean, standard error, and "worst" values were calculated for each of these ten variables. The worst value is the largest mean of the value for each predictor. The response variable was the diagnosis of malignant (represented by 1) or benign (represented by 0). 
 
 # Introduction
 
@@ -53,7 +49,7 @@ Cleaning the data:
 cancer$id <- NULL
 cancer$X <- NULL
 cancer$diagnosis2 = 3
-# Reassigning malignant masses as 1 and benign 0
+# Reassigning malignant masses as 1 and benign as 0
 cancer$diagnosis2[cancer$diagnosis == "M"] = 1
 cancer$diagnosis2[cancer$diagnosis == "B"] = 0
 cancer$diagnosis <- NULL
@@ -68,7 +64,7 @@ table(diagnosis2)
 ```
 
 ```{r}
- barplot (table (ifelse (cancer2$diagnosis2==1, "Benign", "Malignant")), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="# of Images", ylim=c(0, 450))
+ barplot (table (ifelse (cancer$diagnosis2==0, "Benign", "Malignant")), main="Count of Benign and Malignant Tumors", xlab="Diagnosis", ylab="# of Images", ylim=c(0, 450))
 
 ```
 
@@ -117,19 +113,23 @@ attach(cancer2)
 
 ```
 
-The severly right-skewed predictors now have a more symmetric distribution with the log transformation applied. We will use these log transformed predictors as we proceed with our analysis.
+The severly right-skewed predictors now have a more symmetric distribution with the log transformation applied. 
 
-## Plots of Significant Predictors
+## Plots of Predictors in Final Model
+
+In our final model, six predictors were significant in determining whether or not a breast mass was malignant. The distributions of these six predictors are what lies below.
 
 ```{r}
-#this is an example, change later
-# hist(cancer$radius_mean)
-# hist()
-# hist()
-# hist()
+hist(log.radius_worst)
+hist(concavity_worst)
+hist(smoothness_mean)
+hist(log.texture_se)
+hist(log.compactness_mean)
+hist(fractal_dimension_worst)
+
 ```
 
-
+Predictors log(radius worst), smoothness mean, log(texture standard error), and log(compactness mean) are evenly distributed. Log(radius worst), log(texture standard error), and log(compactness mean) have symmetric distributions due to the log transformations we applied to them earlier because of their extreme right skewness. Smoothness mean has a natural even distribution. On the other hand, predictors concavity worst and fractal dimension worst are right skewed. However, because these predictors were not severly right skewed, we did not transform them, so their original values remained for the final model.
 
 ## Correlations and Scatter Plots
 
@@ -152,7 +152,6 @@ Because there are many predictors in our data set, we will look at the correlati
 Mean Predictors:
 
 ```{r fig.height=8, fig.width=8}
-#todo: color by diangosis
 cancer2.mean = data.frame(cancer2$radius_mean, cancer2$texture_mean, cancer2$perimeter_mean, cancer2$log.area_mean, cancer2$smoothness_mean, cancer2$log.compactness_mean, cancer2$log.concavity_mean, cancer2$log.concave.points_mean, cancer2$symmetry_mean, cancer2$fractal_dimension_mean)
 
 pairs(cancer2.mean, pch=1, col=diagnosis2+1)
@@ -201,7 +200,7 @@ plot(cancer.tree_model, uniform = TRUE, margin = 0.1, branch = 0.5,
 text(cancer.tree_model)
 ```
 
-This tree says that log(radius worst) is the single most important predictor in determining if a breast mass is malignant or not. Other significant predictors include texture mean, concave points worst, and texture worst. A breast mass is most likely to be malignant if its log(radius worst) is greater than 2.821 and has a concave points worst value greater than 0.1358. The probability of a breast mass being malignant given these conditions is 98.5%. A breast mass is least likely to be cancerous if its log(radius worst) is less than 2.821 and its texture mean is less than 16.11; this is a probability of 1.16%. There is about a 50/50 chance that the breast mass is malignant if its log(radius worst) is greater than 2.821 and its texture mean is less than 16.11. 
+This tree says that log(radius worst) is the single most important predictor in determining if a breast mass is malignant or not. Other significant predictors include texture mean, concave points worst, and texture worst. A breast mass is most likely to be malignant if its log(radius worst) is greater than 2.821 and has a texture mean value greater than 16.11 The probability of a breast mass being malignant given these conditions is 98.8%. A breast mass is least likely to be cancerous if its log(radius worst) is less than 2.821 and its concave points worst is less than 0.136; this is a probability of 1.15%. There is about a 50/50 chance that the breast mass is malignant if its log(radius worst) is greater than 2.821 and its texture mean is less than 16.11. 
 
 ## ROC Curve of First-order Model
 
@@ -252,7 +251,7 @@ pairs(cancer.tree_model_df, pch=1, col=diagnosis2+1)
 
 Predictors texture mean and texture worst have a strong positive linear correlation at r=0.91. Log(radius worst) and concave points mean also have a significant positive linear correlation with one another, however this correlation is not as strong with an r value of 0.79.
 
-## Residuals of the First-order Model
+## Residuals
 
 ```{r}
 plot (predict(cancer.tree_model), residuals(cancer.tree_model), main="Diagnosis vs
@@ -288,46 +287,19 @@ summary(fwd.model)
 
 ```
 
-The forward stepwise regression ended with a total of six predictors that resulted in the lowest AIC value of 123.95. These predictors are log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean, and fractal_dimension_worst. Log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean are all significant at $\alpha = .001$ with fractal_dimension_worst significant at $\alpha = .01$. The most significant predictor is log.radius_worst with a p-value of 3.62e-14. 
+The forward stepwise regression ended with a total of six predictors that resulted in the lowest AIC value of 123.95. These predictors are log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean, and fractal_dimension_worst. Log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean are all significant at $\alpha = .001$ with fractal_dimension_worst significant at $\alpha = .05$. The most significant predictor is log.radius_worst with a p-value of 3.62e-14. 
 
 We note that the variance inflation factors range from 1.37 to 4.62 and that all variance inflation factors are less than 10--a good sign that there are no indications that multicollinearity may be excessively influencing the least squares estimates of our model. The mean of the VIFs is 3.164. Because this number is somewhat "considerably larger than one", we acknowledge that multicollinearity issues may lie within this model. 
-The odds of the a breast mass being malignant increases the most with each additional unit of smoothness mean where each additional unit of smoothness_mean increases the odds of the breast mass being malignant by approximately 4.5 times. Fair predictors that also increase the chance of a breast mass being cancerous for each additional unit are log(radius worst), concavity worst, log(texture standard error), and fractual dimension worst. The odds that a breat mass is malignant with each additional unit increase in these predictors are 1.31, 1.11, 1.02, and 1.74 times respectively. 
-
-#todo: ask about negative estimates!!!!
+The odds of the a breast mass being malignant increases the most with each additional unit of smoothness mean where each additional unit of smoothness_mean increases the odds of the breast mass being malignant by approximately 4.5 times. Fair predictors that also increase the chance of a breast mass being cancerous for each additional unit are log(radius worst), concavity worst, log(texture standard error), and fractual dimension worst. The odds that a breast mass is malignant with each additional unit increase in these predictors are 1.31, 1.11, 1.02, and 1.74 times respectively. 
 
 The odds of a breast mass being malignant decreases with each additional unit of log(compactness mean) where each additional unit increase in log(compactness mean) decreases the odds of the breast mass being cancerous by 0.95 times.
 
 
-Note: All predictor estimates were divided by 100 before they were expotentiated with Euler's number. 
+Note: All predictor estimates were divided by 100 before they were exponentiated with Euler's number. 
 
-# HERE!!!!!!!!! DO THE TWO PLOTS BELOW!! (STEPWISE AND ROC OF STEPWISE MODEL)
-
-### Plot of Stepwise Model
+## ROC Curve and AUC Analysis
 
 ```{r}
-predpr = predict (m2, type='response')
-predlogit = predict (m2)
-plot (jitter (disease, 0.2) ~ predlogit, xlab="Predicted Logit",
- ylab="Disease, Observed and Probability")
-pred.ord = order (predlogit)
-lines (predlogit[pred.ord], predpr[pred.ord])
-
-```
-
-### Residuals of Stepwise Model
-
-```{r}
-par (mfrow=c(1,2))
-plot (fwd.model, which=c(1,5))
-
-```
-
-The Residuals vs Fitted plot looks reasonable and it appears that the model fits the data very well as indicated by the flat Lowess line and how close to zero it resides. Interestingly, observation 298 was highlighted as a potential outlier again, but 136 and 42 were not from the previous model. Instead, observations 14 and 41 are now indicated as potential outliers along with 298. The Residuals vs Leverage Plot suggests the presence of a few influential points in the data as indicated by the presence of Cook's distance contour lines on the graph. However, although points 298, 69, and 529 come close to the contour lines so they do not concern us.
-
-### ROC Curve and AUC Analysis of Best First-order Model
-
-```{r}
-#Celia
 par (mfrow=c(1,1))
 pred1 <- prediction(fwd.model$fitted.values, fwd.model$y)
 perf1 <- performance(pred1,"tpr","fpr")
@@ -357,67 +329,201 @@ auc.best
 # Plot the maximum point(s) on the ROC plot
 points (auc.best$FalsePosRate, auc.best$sensitivity, cex=1.3)
 ```
-The ROC curve suggests the predictive ability of this model is better than random guessing, since the AUC (0.99) is larger than 0.5. Our forward stepwise model can accurately distinguish between whether a breast mass is malignant or benign. An AUC value of 0.99 tells us that our forward stepwise model can accurately predict whether or not a breast mass is malignant or benign 99% of the time given this data set.
 
-The optimal cutoff for classification is a fitted probability of 0.419, which has a false positive rate (1 - specificity) of 0.03, and a true positive rate (sensitivity) of 0.95. That point is shown as a black circle on the ROC curve.
+The AUC value is for this model is 0.9932 which is slightly better than our tree regression model by .01.
 
+Again, the ROC curve suggests the predictive ability of this model is better than random guessing, since the AUC (0.9932) is larger than 0.5. Our forward stepwise model can accurately distinguish between whether a breast mass is malignant or benign.
+
+The optimal cutoff for classification is a fitted probability of 0.419, which has a false positive rate of 0.03, and a true positive rate of 0.95. This point is shown as a black circle on the ROC curve.
+
+We note that the total of false positives and false negatives for this model is 21. We will compare this total later to other models to assess to help determine our best model.
+
+# Fitting a Model with Interactions
+
+We will now examine two way interactions among our significant predictor variables: log(radius worst), concavity worst, smoothness mean, log(texture standard error), log(compactness mean), and fractal dimension worst. These variables will need to be centered before we proceed.
 
 ```{r}
+# Centering the significant predictors
+detach (cancer2)
+my.center = function (x) (x - mean (x))
+cancer2$log.radius_worst.c = my.center (cancer2$log.radius_worst)
+cancer2$concavity_worst.c = my.center (cancer2$concavity_worst)
+cancer2$smoothness_mean.c = my.center (cancer2$smoothness_mean)
+cancer2$log.texture_se.c = my.center (cancer2$log.texture_se)
+cancer2$log.compactness_mean.c = my.center (cancer2$log.compactness_mean)
+cancer2$fractal_dimension_worst.c = my.center (cancer2$fractal_dimension_worst)
+attach(cancer2)
+
+interactions = glm(diagnosis2 ~ (log.radius_worst.c + concavity_worst.c + smoothness_mean.c + log.texture_se.c + log.compactness_mean.c + fractal_dimension_worst.c)^2, family=binomial)
+
+summary(interactions)
 
 ```
 
+Two interaction effects are significant, smoothness_mean.c x log(texture_standard_error.c) and smoothness_mean.c x log(compactness_mean.c) both to a false-positive rate of $\alpha =.05$. The most significant interaction effect is smoothness_mean.c x log(compactness_mean.c) with a p-value of 0.0311. Smoothness_mean.c x log(texture_standard_error.c) doesn't fall very fall behind with a p-value of 0.0359.
+
+We will now fit the reduced first-order model containing only our significant predictors with the interaction effects smoothness_mean.c x log.texture_se.c and smoothness_mean.c x log.compactness_mean.c added to the model and test whether these interaction effects are significant.
+
 ```{r}
+fwd.model.interactions = step(min.model, direction='forward', scope=(~ log.radius_worst + concavity_worst.c + smoothness_mean.c + log.texture_se + log.compactness_mean.c + fractal_dimension_worst + smoothness_mean.c*log.texture_se.c + smoothness_mean.c*log.compactness_mean.c ))
+
+summary(fwd.model.interactions)
 
 ```
 
-## Fitting a Model with Interactions
-a.) Include interaction effects from Step 5
-b.) Apply stepwise regression using the step function
-c.) What are the results?
-d.) Which model(s) seems(s) to be best?
+The forward step-wise regression did not find any interaction effects that improved our model. We are left with predictors log(radius worst), concavity worst, smoothness mean, log(texture standard error), compactness mean, and fractal dimension worst--the same six predictors in our first forward step-wise regression model before we attempted to add interaction effects. 
+
+Sensitivity and Specificity Analysis:
 
 ```{r}
 
+pred1 <- prediction(fwd.model.interactions$fitted.values, fwd.model.interactions$y)
+perf1 <- performance(pred1,"tpr","fpr")
+auc1 <- performance(pred1,"auc")@y.values[[1]]
+
+auc.table = cbind.data.frame(cutoff=pred1@cutoffs,tp=pred1@tp, fp=pred1@fp, tn=pred1@tn, fn=pred1@fn)
+names (auc.table) = c("Cutoff", "TP", "FP", "TN", "FN")
+auc.table$sensitivity = auc.table$TP / (auc.table$TP + auc.table$FN)
+auc.table$specificity = auc.table$TN / (auc.table$TN + auc.table$FP)
+auc.table$FalsePosRate = 1 - auc.table$specificity
+auc.table$sens_spec = auc.table$sensitivity + auc.table$specificity
+
+# Find the row(s) in the AUC table where sensitivity + specificity is maximized
+auc.best = auc.table [auc.table$sens_spec == max (auc.table$sens_spec),]
+auc.best
 
 ```
 
+The total number of false positives and false negatives stayed the same from our previous forward step-wise model without any interactions. This is because the forward step-wise regression did not find any significant predictors so the model stayed the same.
+
+# Evaluation of all Models
+
+The first model we created, the tree regression model, found four significant predictors that resulted in an AUC value of 0.98. Our second model created with forward step-wise regression gave us six predictors and an AUC value of 0.9932 with a total of 21 false negative and false positives combined. Given that there were no significant interaction effects to add and that the forward step-wise regression model did improve the tree regression model's AUC value by 0.1, we have decided to go with the forward step-wise regression model as our final model.
 
 # Final Model
 
-## Residual Diagnostics 
+```{r}
+predpr = predict (fwd.model, type='response')
+predlogit = predict (fwd.model)
+plot (jitter (diagnosis2, 0.2) ~ predlogit, xlab="Predicted Logit",
+ ylab="Diagnosis, Observed and Probability", main="Plot of Final Model")
+pred.ord = order (predlogit)
+lines (predlogit[pred.ord], predpr[pred.ord])
+
+```
+
+The plot of Predicted Diagnosis, Observed and Probability vs Logit looks very good for our final model. There are no points in the upper left and lower right corners indicating that there were very few observations that were misclassified, meaning that the false negative and false postive numbers for this model are very low. 
+
+## Model Diagnostics
+
+Deviance test of lack of fit:
 
 ```{r}
-#todo: standarized residuals vs Leverage, with Cook's Distance
-par (mfrow = c(2, 2))
-plot(model here)
-```
+# Forward model
+pchisq(deviance(fwd.model), df.residual(fwd.model), lower=F)
 
 ```
 
+There is no significant lack of fit in the final model because its p-value is greater than 0.05.
 
-## Plot response variable (jittered) vs fitted values (logit scale)
+Likelihood Ratio (LR) test statistic and P-value in R (multiple logistic regression):
 
 ```{r}
+# Forward model
+1 - pchisq(fwd.model$null.deviance - fwd.model$deviance,
+ fwd.model$df.null - fwd.model$df.residual)
 
 ```
 
+Our final model using forward step-wise regression has a significant effect in determining the status of whether or not a breast mass in malignant due to the fact that its p-value from the LR test is less than than 0.05.
+
+## Residuals
+
+```{r}
+par (mfrow=c(1,2))
+plot (fwd.model, which=c(1,5))
+
+```
+
+The Residuals vs Fitted plot looks reasonable and it appears that the model fits the data very well as indicated by the flat Lowess line and how close to zero it resides. Noteably, observation 298, 14, and 41 were highlighted as outliers with observation 298 being the furtherest point away from the rest of the data. However, these flagged outliers, including 298, do not appear to be "obvious" outliers, so we will not remove them from the data set.
+
+The Residuals vs Leverage Plot suggests the presence of a few influential points in the data as indicated by the presence of Cook's distance contour lines on the graph. However, although points 298, 69, and 529 come close to the contour lines they do not cross these lines so they do not concern us.
 
 ## Influence Analysis
 
 ```{r}
+influenceIndexPlot(fwd.model, vars=c("Cook","hat"), main = "Diagnostic Plots")
 
 ```
 
+Rows 69 and 529 have relatively high Cook’s distance, but they are not above the 0.5 cutoff so they do not concern us.
 
+Rows 69 and 243 have the highest leverage values. Observation 243 is not an obvious outlier with respect to the rest of the other leverage values, however, 69 is. We will remove observation 69 from our dataset and see if results improve.
+
+Removing observation 69 from data set:
 
 ```{r}
-predict(fwd.model)
-```
-## Interpretation
-a.) Meaning/interpretation of regression parameters
-b.) Make some example response predictions with confidence intervals and interpret those results
+cancer2removed = cancer2[-c(69),]
 
-The following tables show some example predicted probabilities and their confidence intervals for subjects.
+min.model = glm(diagnosis2 ~ 1, family=binomial, data=cancer2removed)
+
+fwd.model.removed69 = step(min.model, direction='forward', scope=(~ log.radius_worst + concavity_worst + smoothness_mean + log.texture_se + log.compactness_mean + fractal_dimension_worst))
+
+summary(fwd.model.removed69)
+
+```
+
+Removing observation 69 did improved the AIC value from 123.95 to 122.65. We will now take a look at the ROC Curve and AUC value to further analyze how the removal of this observation effects our ability to accurately determine whether or not a breast mass is malignant.
+
+## ROC Curve and AUC Analysis
+
+```{r}
+par (mfrow=c(1,1))
+pred1 <- prediction(fwd.model.removed69$fitted.values, fwd.model.removed69$y)
+perf1 <- performance(pred1,"tpr","fpr")
+auc1 <- performance(pred1,"auc")@y.values[[1]]
+auc1
+
+plot(perf1, lwd=2, col=2)
+abline(0,1)
+legend(0.6, 0.3, c(paste ("AUC=", round (auc1, 4), sep="")),   lwd=2, col=2)
+
+# Extract the X and Y values from the ROC plot, as well as the probability cutoffs
+roc.x = slot (perf1, "x.values") [[1]]
+roc.y = slot (perf1, "y.values") [[1]]
+cutoffs = slot (perf1, "alpha.values") [[1]]
+
+auc.table = cbind.data.frame(cutoff=pred1@cutoffs,tp=pred1@tp, fp=pred1@fp, tn=pred1@tn, fn=pred1@fn)
+names (auc.table) = c("Cutoff", "TP", "FP", "TN", "FN")
+auc.table$sensitivity = auc.table$TP / (auc.table$TP + auc.table$FN)
+auc.table$specificity = auc.table$TN / (auc.table$TN + auc.table$FP)
+auc.table$FalsePosRate = 1 - auc.table$specificity
+auc.table$sens_spec = auc.table$sensitivity + auc.table$specificity
+
+# Find the row(s) in the AUC table where sensitivity + specificity is maximized
+auc.best = auc.table [auc.table$sens_spec == max (auc.table$sens_spec),]
+auc.best
+
+# Plot the maximum point(s) on the ROC plot
+points (auc.best$FalsePosRate, auc.best$sensitivity, cex=1.3)
+```
+
+The AUC value is for this model is 0.9935208 which is slightly better the our previous model whose AUC value was 0.9931822. The ROC curve suggests the predictive ability of this model is better than random guessing, since the AUC (0.9935) is larger than 0.5. Our forward step-wise model with observation 69 removed can accurately distinguish between whether a breast mass is malignant or benign.
+
+The optimal cutoff for classification is a fitted probability of 0.397, which has a false positive rate of 0.034, and a true positive rate of 0.95. This point is shown as a black circle on the ROC curve.
+
+Conclusively, removing observation 69 did improve the results of our final model. We will now interpret the parameters of this model in which the influential observation was removed.
+
+
+Our chosen final model contains six predictors: log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean, and fractal_dimension_worst. The p-values of these predictors are 1.42e-13, 6.35e-05, 1.38e-05, 8.98e-05, 0.000479, and 0.152012 respectively. Log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean are all significant to a false positive rate of $\alpha = .001$ while fractal_dimension_worst is not significant at all. 
+
+The odds of a breast mass being malignant increases the most with each additional unit of smoothness_mean where each additional unit of smoothness_mean increases the odds of a breast mass being malignant by approximately 4.7 times. The least influential factor is log(texture_se) where each additional unit increase in this predictor only increases the odds of a breast mass being malignant by 1.02 times. Fair predictors that also increase the chance of a breast mass being cancerous for each additional unit are log(radius worst), concavity worst, and fractual dimension worst. The odds that a breast mass is malignant with each additional unit increase in these predictors are 1.31, 1.13, and 1.54 times respectively. 
+
+Interestingly, the odds of a breast mass being malignant decreases with each additional unit of log(compactness_mean) where each additional unit increase in log(compactness mean) decreases the odds of the breast mass being cancerous by 0.95 times.
+
+## Predictions
+
+following tables show some example predicted probabilities and their confidence intervals for subjects.
 ```{r}
 # Change variables!!!
 
@@ -436,6 +542,8 @@ pred.df$upr.pr = round (exp (pred.df$upr) / (1 + exp (pred.df$upr)), 3)
 pred.df [c(30,47,78,21,16,11), c(2,5:7,14:16)]
 
 ```
+
+
 
 The following table summarizes the observed and predicted classifications of malignancy using the first-order model:
 ```{r}
