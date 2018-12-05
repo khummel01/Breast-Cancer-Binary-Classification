@@ -544,33 +544,11 @@ pred.df [c(30,47,78,21,16,11), c(2,5:7,14:16)]
 
 ```
 
-
-
-The following table summarizes the observed and predicted classifications of malignancy using the first-order model:
-```{r}
-# Change variables!!!
-
-pred.df$pred.dis = ifelse (pred.df$fit.pr >= auc.best$Cutoff[1], "Pred.Yes", "Pred.No")
-table (pred.df$disease, pred.df$pred.dis)
-```
-The following table summarizes the observed and predicted classifications of malignancy using the stepwise model:
-```{r}
-# Change variables!!!
-
-pred.df$pred.dis = ifelse (pred.df$fit.pr >= auc.best$Cutoff[1], "Pred.Yes", "Pred.No")
-table (pred.df$disease, pred.df$pred.dis)
-```
-The following table summarizes the observed and predicted classifications of malignancy using the interaction effects:
-```{r}
-# Change variables!!!
-
-pred.df$pred.dis = ifelse (pred.df$fit.pr >= auc.best$Cutoff[1], "Pred.Yes", "Pred.No")
-table (pred.df$disease, pred.df$pred.dis)
-```
-
 ## Conclusion
 
 This analysis shows that the probability of a breast mass being malignant is most highly correlated with log(worst radius), worst concavity, mean smoothness, log(standard error of texture), log(mean compactness), and worst fractal dimension. The odds of a breast mass being malignant increases the most with each additional unit of mean smoothness where each additional unit of mean smoothness increases the odds of a breast mass being malignant by approximately 4.7 times. The least influential factor is log(SE texture) where each additional unit increase in this predictor only increases the odds of a breast mass being malignant by 1.02 times. With an AUC value of 0.9935208, our model can accurately predict whether or not a breast mass is malignant or benign 99.25% of the time given this data set. These results could potentially be used in the medical field to help predict whether a given breast mass is malignant or benign. 
 
 Some follow-up questions could include:
+-Is this dataset representative of all types of breast cancers?
+-Is the scope of this dataset large enough to conclude on the predictative abilities of each predictor variable?
 
