@@ -1,4 +1,4 @@
-# Breast-Cancer-Binary-Classification
+# Breast Cancer Binary Classification
 
 [Data set taken from Kaggle](https://www.kaggle.com/uciml/breast-cancer-wisconsin-data)
 
