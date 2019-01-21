@@ -1,4 +1,4 @@
-# Breast Cancer Binary Classification
+# Predicting Malignancy of Breast Masses from Digitalized Images
 
 [Data set taken from Kaggle](https://www.kaggle.com/uciml/breast-cancer-wisconsin-data)
 
