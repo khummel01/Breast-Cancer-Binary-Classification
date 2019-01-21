@@ -20,6 +20,9 @@ The AUC value is for this model is 0.99352081. The ROC curve suggests the predic
 
 ![alt text](https://github.com/khummel01/Breast-Cancer-Binary-Classification/blob/master/images/residuals.png "Residuals")
 
+The Residuals vs Fitted plot looks reasonable and it appears that the model fits the data very well as indicated by the flat Lowess line and how close to zero it resides. Noteably, observation 298, 14, and 41 were highlighted as outliers with observation 298 being the furtherest point away from the rest of the data. However, these flagged outliers, including 298, do not appear to be "obvious" outliers, so we will not remove them from the data set.
+
+The Residuals vs Leverage Plot suggests the presence of a few influential points in the data as indicated by the presence of Cook's distance contour lines on the graph. However, although points 298, 69, and 529 come close to the contour lines they do not cross these lines so they do not concern us.
 
 ## Conclusion
 
