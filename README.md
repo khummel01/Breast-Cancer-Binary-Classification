@@ -10,7 +10,7 @@ This report examines 569 breast masses using logistic regression methods. The pr
 
 Our chosen final model contains six predictors: log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean, and fractal_dimension_worst. The p-values of these predictors are 1.42e-13, 6.35e-05, 1.38e-05, 8.98e-05, 0.000479, and 0.152012 respectively. Log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean are all significant to a false positive rate of $\alpha = .001$ while fractal_dimension_worst is not significant at all. 
 
-**ROC curve using of final model using step-wise regression:**
+**ROC curve using of final model using step-wise regression**
 
 ![alt text](https://github.com/khummel01/Breast-Cancer-Binary-Classification/blob/master/images/roc_curve.png "ROC Curve")
 
