@@ -2,7 +2,6 @@
 
 [Data set taken from Kaggle](https://www.kaggle.com/uciml/breast-cancer-wisconsin-data)
 
-
 ## Abstract 
 
 This report examines 569 breast masses using logistic regression methods. The primary goal is to determine what predictor variables are most effective at predicting the malignancy of a breast mass, as well as to see if there is a certain combination of predictor variables that most accurately predicts malignancy. The ten predictor variables were radius (mean of distances from center to points on the perimeter), texture (standard deviation of gray-scale values), perimeter, area, smoothness (local variation in radius lengths), compactness (perimeter^2/area – 1), concavity (severity of concave portions of the contour), symmetry, and fractal dimension (“coastline approximation”-1). We have thirty total predictor variables because the mean, standard error, and "worst" values were calculated for each of these ten variables. The worst value is the largest mean of the value for each predictor. The response variable was the diagnosis of malignant (represented by 1) or benign (represented by 0).
