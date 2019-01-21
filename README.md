@@ -8,7 +8,7 @@ This report examines 569 breast masses using logistic regression methods. The pr
 
 ## Results
 
-Our chosen final model contains six predictors: log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean, and fractal_dimension_worst. The p-values of these predictors are 1.42e-13, 6.35e-05, 1.38e-05, 8.98e-05, 0.000479, and 0.152012 respectively. Log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean are all significant to a false positive rate of $\alpha = .001$ while fractal_dimension_worst is not significant at all. 
+Our chosen final model contains six predictors: log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean, and fractal_dimension_worst. The p-values of these predictors are 1.42e-13, 6.35e-05, 1.38e-05, 8.98e-05, 0.000479, and 0.152012 respectively. Log.radius_worst, concavity_worst, smoothness_mean, log.texture_se, log.compactness_mean are all significant to a false positive rate of α = .001$ while fractal_dimension_worst is not significant at all. 
 
 **ROC curve using of final model using step-wise regression**
 
@@ -29,6 +29,7 @@ The Residuals vs Leverage Plot suggests the presence of a few influential points
 This analysis shows that the probability of a breast mass being malignant or benign can be accurately predicted from the log(worst radius), worst concavity, mean concavity, log(standard error of texture), log(mean compactness), and worst fractal dimension measurments of a digitalized image of a breast mass. The odds of a breast mass being malignant increases the most with each additional unit of log(radius worst) where each additional 0.15 unit of log(radius worst) increases the odds of a breast mass being malignant by approximately 58.1 times. The least influential factor is worst fractal dimension where each additional 0.015 unit increase in this predictor only increases the odds of a breast mass being malignant by 1.93 times. With an AUC value of 0.9935208, our model can accurately predict whether or not a breast mass is malignant or benign 99.25% of the time given this data set. These results could be used in the medical field to help predict whether or not a patient has breast cancer. 
 
 ## Follow-up Questions
+
 1. Is this dataset representative of all types of breast cancers?
 
 2. Is the scope of this data set large enough to conclude on the predictative abilities of each predictor variable?
